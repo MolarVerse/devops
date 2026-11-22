@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import importlib.metadata
+import re
+import subprocess
 import typing
 
 import pytest
@@ -9,6 +12,7 @@ import pytest
 from devops.cpp.ast import engine
 from devops.cpp.ast.checks.no_global_using import NoGlobalUsing
 from devops.cpp.ast.engine import (
+    _builtin_include_dir_for_compiler,
     _extract_plain_include,
     _has_resource_dir,
     _with_auto_resource_dir,
@@ -197,6 +201,65 @@ class TestFatalErrorInNestedInclude:
         assert "not/there.hpp" in parse_errors[0].message
 
 
+class TestTooManyErrorsNamesFirstError:
+    """A "too many errors" fatal also names the first real error."""
+
+    def test_first_error_is_named(self, tmp_path: Path) -> None:
+        """The cause in an included header is reported, not just the limit."""
+        inner = tmp_path / "inner.hpp"
+        inner.write_text("".join(f"undeclared_t{i} v{i};\n" for i in range(40)))
+        outer = tmp_path / "outer.cpp"
+        outer.write_text('#include "inner.hpp"\n')
+
+        diags = run_ast_checks(outer, outer.read_text(), [f"-I{tmp_path}"])
+
+        msg = next(d.message for d in diags if d.check_id == "astParseError")
+        assert "too many errors" in msg
+        assert "first error:" in msg
+        assert "undeclared_t0" in msg
+        assert "inner.hpp:1" in msg
+
+
+def _system_clang_major() -> int | None:
+    """Return the major version of the ``clang++`` on PATH, if any."""
+    exe = engine.shutil.which("clang++")
+    if exe is None:
+        return None
+    try:
+        out = subprocess.run(  # noqa: S603 - no shell, trusted executable
+            [exe, "--version"], capture_output=True, text=True, timeout=5, check=False
+        ).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    match = re.search(r"clang version (\d+)", out)
+    return int(match.group(1)) if match else None
+
+
+class TestGccIntrinsicHeaders:
+    """GCC compile database + intrinsics headers must not break the parse."""
+
+    def test_intrinsics_include_parses_cleanly(self, tmp_path: Path) -> None:
+        """<immintrin.h> parses with the args a GCC compile database yields."""
+        if engine.shutil.which("clang++") is None:
+            pytest.skip("needs a Clang on PATH")
+        try:
+            libclang_major = int(importlib.metadata.version("libclang").split(".")[0])
+        except importlib.metadata.PackageNotFoundError:
+            pytest.skip("needs the libclang pip wheel")
+        if _system_clang_major() != libclang_major:
+            pytest.skip("system Clang's headers must match libclang's version")
+        gcc_dir = _builtin_include_dir_for_compiler("g++")
+        if gcc_dir is None:
+            pytest.skip("needs g++")
+        src = tmp_path / "t.cpp"
+        src.write_text("#include <immintrin.h>\nint main() {}\n")
+        args = _with_auto_resource_dir(["-std=c++17"], "g++")
+
+        diags = run_ast_checks(src, src.read_text(), args, checks=[])
+
+        assert not any(d.check_id == "astParseError" for d in diags)
+
+
 class TestGccBuiltinIncludeFallback:
     """A GCC compiler (no ``-print-resource-dir``) contributes its builtin headers."""
 
@@ -205,6 +268,7 @@ class TestGccBuiltinIncludeFallback:
     ) -> None:
         """With no resource dir, ``-isystem <gcc builtin include dir>`` is added."""
         monkeypatch.setattr(engine, "_resource_dir_for_compiler", lambda _c: None)
+        monkeypatch.setattr(engine.shutil, "which", lambda _n: None)
         monkeypatch.setattr(
             engine, "_builtin_include_dir_for_compiler", lambda _c: "/gcc/include"
         )
@@ -212,6 +276,27 @@ class TestGccBuiltinIncludeFallback:
         result = _with_auto_resource_dir(["-std=c++23"], "g++-14")
 
         assert result == ["-std=c++23", "-isystem", "/gcc/include"]
+
+    def test_gcc_compiler_prefers_clang_on_path(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """GCC's intrinsic headers break libclang, so a Clang on PATH wins."""
+        monkeypatch.setattr(
+            engine.shutil, "which", lambda n: "/usr/bin/clang++" if "++" in n else None
+        )
+        monkeypatch.setattr(
+            engine,
+            "_resource_dir_for_compiler",
+            lambda c: "/clang-rd" if c == "/usr/bin/clang++" else None,
+        )
+        monkeypatch.setattr(
+            engine, "_builtin_include_dir_for_compiler", lambda _c: "/gcc/include"
+        )
+
+        assert _with_auto_resource_dir(["-x"], "g++-14") == [
+            "-x",
+            "-resource-dir=/clang-rd",
+        ]
 
     def test_clang_resource_dir_wins_over_gcc_fallback(
         self, monkeypatch: pytest.MonkeyPatch

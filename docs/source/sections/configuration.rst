@@ -204,6 +204,16 @@ Controls the checks run by :ref:`cpp_checks <cli-cpp_checks>`.
        also use ``{ext}`` (the upper-cased extension: ``HPP``,
        ``IMPL_HPP``, ``TPP`` or ``H``). Raises a ``ConfigError`` at load
        time if set without ``{path}``.
+   * - ``forbidden_spellings``
+     - table of string -> string
+     - ``{}``
+     - Dictionary of spellings that must not appear in C++ files, mapped to
+       the spelling to use instead (``[cpp.forbidden_spellings]``,
+       e.g. ``colour = "color"``). Matched case-sensitively on whole words
+       by default (``colour`` does not match ``colourful``); use
+       ``colour = { replacement = "color", within_words = true }`` to also
+       flag it inside longer words. A plain text rule, not the
+       AST framework. Empty disables the rule.
    * - ``ast_checks``
      - boolean
      - ``true``

@@ -117,8 +117,9 @@ def _with_auto_resource_dir(args: list[str], compiler: str) -> list[str]:
     -------
     list[str]
         `args` unchanged if it already sets ``-resource-dir`` or nothing could
-        be auto-detected; otherwise `args` plus ``-resource-dir=<path>`` (Clang)
-        or ``-isystem <builtin include dir>`` (GCC).
+        be auto-detected; otherwise `args` plus ``-resource-dir=<path>`` (Clang,
+        or a Clang on PATH for a GCC compiler) or, for GCC with no Clang
+        available, ``-isystem <builtin include dir>``.
 
     """
     if _has_resource_dir(args):
@@ -126,12 +127,22 @@ def _with_auto_resource_dir(args: list[str], compiler: str) -> list[str]:
     resource_dir = _resource_dir_for_compiler(compiler)
     if resource_dir is not None:
         return [*args, f"-resource-dir={resource_dir}"]
-    # Not a Clang (e.g. a GCC compile database): use that compiler's own
-    # builtin headers instead, so libclang can still parse past <cstddef>.
+    # Not a Clang (e.g. a GCC compile database).
     builtin_dir = _builtin_include_dir_for_compiler(compiler)
-    if builtin_dir is not None:
-        return [*args, "-isystem", builtin_dir]
-    return args
+    if builtin_dir is None:
+        return args
+    # Prefer the resource dir of a Clang on PATH: GCC's own builtin headers
+    # contain GCC-only intrinsics (<xmmintrin.h> and friends) that libclang
+    # rejects with errors like "conflicting types for '_mm_prefetch'".
+    clang_exe = shutil.which("clang++") or shutil.which("clang")
+    clang_resource_dir = (
+        _resource_dir_for_compiler(clang_exe) if clang_exe is not None else None
+    )
+    if clang_resource_dir is not None:
+        return [*args, f"-resource-dir={clang_resource_dir}"]
+    # No Clang available: use the GCC compiler's own builtin headers so
+    # libclang can at least parse past <cstddef>.
+    return [*args, "-isystem", builtin_dir]
 
 
 def _with_fallback_resource_dir(args: list[str]) -> list[str]:
@@ -325,6 +336,23 @@ def run_ast_checks(
                 f"{fatal.location.line}:{fatal.location.column})"
             )
         )
+        # "too many errors emitted" carries no location and hides the real
+        # cause: name the first ordinary error that led up to it.
+        first_error = next(
+            (
+                d
+                for d in translation_unit.diagnostics
+                if d.severity == clang.Diagnostic.Error
+            ),
+            None,
+        )
+        if first_error is not None and fatal.spelling.startswith("too many errors"):
+            err_file = first_error.location.file
+            where += (
+                f" — first error: {first_error.spelling} "
+                f"({err_file.name if err_file else filename}:"
+                f"{first_error.location.line}:{first_error.location.column})"
+            )
         diagnostics.append(
             Diagnostic(
                 file=filename,

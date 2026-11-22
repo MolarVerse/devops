@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release
 
+### Features
+
+#### CPP Rules
+
+- Add the `forbidden_spellings` option to `[cpp]`: a dictionary of spellings (e.g. `colour = "color"`) that are flagged as whole words in every C++ file, together with the spelling to use instead; `colour = { replacement = "color", within_words = true }` also flags it inside longer words. Errors report `file:line`; it is a plain text rule, independent of the AST framework (Fixes #220)
+
+#### AST Checks
+
+- The `astParseError` for libclang's "too many errors emitted, stopping now" now also names the first real error (message and `file:line:col`) that caused it, instead of only the location-less error limit
+- With a GCC compile database, use the `-resource-dir` of a Clang on `PATH` instead of GCC's builtin include dir (its `<xmmintrin.h>`/`<immintrin.h>` intrinsics made libclang fail with e.g. "conflicting types for '_mm_prefetch'"); GCC's dir is only used when no Clang is available
+
+#### Performance
+
+- Run the cheap text-based C++ rules before the libclang AST rule; with `fail_fast`, a file that already fails one of them is no longer parsed (#220)
+
 <!-- insertion marker -->
 ## [1.2.0](https://github.com/MolarVerse/devops/releases/tag/1.2.0) - 2026-11-20
 

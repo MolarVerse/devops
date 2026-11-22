@@ -1,10 +1,22 @@
 """Module for parsing C++ configuration."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 
 from devops.logger import config_logger
 
 from .base import ConfigError, get_bool, get_int, get_str, get_str_list, get_table
+
+
+@dataclass(frozen=True)
+class ForbiddenSpelling:
+    """A forbidden spelling's replacement and matching mode."""
+
+    # The spelling (or hint) to use instead.
+    replacement: str
+
+    # If True, the spelling is also flagged inside longer words
+    # (e.g. "colour" in "colourful"); otherwise whole words only.
+    within_words: bool = False
 
 
 @dataclass
@@ -73,6 +85,13 @@ class CppConfig:
     # dict whose keys/types are defined by the individual check's configure()
     # method.  Declared in TOML as sub-tables of cpp.ast_check_config.
     ast_check_config: dict[str, dict] = field(default_factory=dict)
+
+    # Spellings that must not appear in C++ files, mapped to the spelling (or
+    # hint) to use instead, e.g. {"colour": ForbiddenSpelling("color")}. Matched
+    # case-sensitively, by default on whole words only (see
+    # ForbiddenSpelling.within_words), by a plain text rule (not
+    # part of the AST framework). Empty (the default) disables the rule.
+    forbidden_spellings: dict[str, ForbiddenSpelling] = field(default_factory=dict)
 
     # Path to the JSON file used to persist incremental check state.
     # When set (non-None, non-empty), cpp_checks runs in incremental mode
@@ -202,6 +221,15 @@ class CppConfig:
             "  # only check including files with these extensions\n"
         )
 
+        lines.append(
+            "#\n"
+            "# Forbidden spellings (word -> replacement), matched on whole words:\n"
+            "#[cpp.forbidden_spellings]\n"
+            '#colour = "color"\n'
+            "# Also flag inside longer words (e.g. colourful):\n"
+            '#colour = { replacement = "color", within_words = true }\n'
+        )
+
         isf = (
             f'"{self.incremental_state_file}"'
             if self.incremental_state_file
@@ -214,6 +242,54 @@ class CppConfig:
         lines.append(f"#parallel_jobs = {self.parallel_jobs}\n")
 
         return lines
+
+
+def _parse_forbidden_spellings(table: dict) -> dict[str, ForbiddenSpelling]:
+    """Parse and validate ``[cpp.forbidden_spellings]``.
+
+    Each value is either a replacement string (whole-word matching) or an
+    inline table ``{ replacement = "...", within_words = true }``.
+
+    Raises
+    ------
+    ConfigError
+        If a spelling is empty or a value has an invalid shape.
+
+    """
+    result: dict[str, ForbiddenSpelling] = {}
+    for word, value in get_table(table, "forbidden_spellings").items():
+        if not word.strip():
+            msg = "forbidden_spellings: spellings must not be empty."
+            raise ConfigError(msg)
+        if isinstance(value, str):
+            result[word] = ForbiddenSpelling(value)
+            continue
+        if not isinstance(value, dict):
+            msg = (
+                f"[cpp.forbidden_spellings]: '{word}' must map to a replacement "
+                f"string or a table, got {type(value).__name__}."
+            )
+            if word in {f.name for f in fields(CppConfig)}:
+                msg += (
+                    f" '{word}' is a [cpp] option: in TOML every key after a "
+                    "[cpp.forbidden_spellings] header belongs to that table, so "
+                    "move [cpp.forbidden_spellings] below all other [cpp] options."
+                )
+            raise ConfigError(msg)
+        unknown = sorted(set(value) - {"replacement", "within_words"})
+        replacement = value.get("replacement")
+        within_words = value.get("within_words", False)
+        if unknown or not isinstance(replacement, str):
+            msg = (
+                f"forbidden_spellings: '{word}' needs a string 'replacement' "
+                f"and optionally 'within_words' (unknown keys: {unknown})."
+            )
+            raise ConfigError(msg)
+        if not isinstance(within_words, bool):
+            msg = f"forbidden_spellings: 'within_words' of '{word}' must be a bool."
+            raise ConfigError(msg)
+        result[word] = ForbiddenSpelling(replacement, within_words)
+    return result
 
 
 def parse_cpp_config(raw_config: dict) -> CppConfig:
@@ -281,6 +357,8 @@ def parse_cpp_config(raw_config: dict) -> CppConfig:
         check_id: get_table(raw_check_config, check_id) for check_id in raw_check_config
     }
 
+    forbidden_spellings = _parse_forbidden_spellings(table)
+
     incremental_state_file = get_str(table, "incremental_state_file") or None
 
     fail_fast = get_bool(table, "fail_fast", default=CppConfig.fail_fast)
@@ -302,6 +380,7 @@ def parse_cpp_config(raw_config: dict) -> CppConfig:
         ast_check_enabled_ids=ast_check_enabled_ids,
         ast_check_disabled_ids=ast_check_disabled_ids,
         ast_check_config=ast_check_config,
+        forbidden_spellings=forbidden_spellings,
         incremental_state_file=incremental_state_file,
         fail_fast=fail_fast,
         parallel_jobs=parallel_jobs,
