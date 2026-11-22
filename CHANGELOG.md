@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 #### AST Checks
 
+- Every AST check now accepts `exclude_paths` in its `[cpp.ast_check_config.<id>]` table to skip files or directories (same patterns as before for `noForbiddenInclude`/`enforceCppOnlyInclude`); a file excluded by all enabled checks is not parsed (Fixes #223)
 - The `astParseError` for libclang's "too many errors emitted, stopping now" now also names the first real error (message and `file:line:col`) that caused it, instead of only the location-less error limit
 - With a GCC compile database, use the `-resource-dir` of a Clang on `PATH` instead of GCC's builtin include dir (its `<xmmintrin.h>`/`<immintrin.h>` intrinsics made libclang fail with e.g. "conflicting types for '_mm_prefetch'"); GCC's dir is only used when no Clang is available
 

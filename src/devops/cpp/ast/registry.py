@@ -145,6 +145,25 @@ def select_checks(
     return [c for c in checks if c.id not in disabled]
 
 
+def _parse_exclude_paths(check_id: str, config: dict) -> tuple[str, ...]:
+    """Read the generic ``exclude_paths`` key of one check's config table.
+
+    Raises
+    ------
+    ConfigError
+        If ``exclude_paths`` is present but is not a list of strings.
+
+    """
+    raw = config.get("exclude_paths", [])
+    if not isinstance(raw, list) or not all(isinstance(p, str) for p in raw):
+        msg = (
+            f"{check_id}: 'exclude_paths' in [cpp.ast_check_config.{check_id}] "
+            "must be a list of strings"
+        )
+        raise ConfigError(msg)
+    return tuple(raw)
+
+
 def configure_checks(
     checks: list[Check],
     check_config: dict[str, dict] | None = None,
@@ -152,7 +171,10 @@ def configure_checks(
     """Apply per-check configuration and return a new list of checks.
 
     Each check whose `.id` appears in `check_config` receives a shallow
-    copy so that the shared `ALL_CHECKS` singletons are never mutated.
+    copy so that the shared `ALL_CHECKS` singletons are never mutated. The
+    generic ``exclude_paths`` key (path patterns of files the check must not
+    run on) is handled here for every check; the rest of the table goes to
+    the check's own ``configure()``.
 
     Parameters
     ----------
@@ -175,6 +197,9 @@ def configure_checks(
     for check in checks:
         if check.id in check_config:
             configured = copy.copy(check)
+            configured.exclude_paths = _parse_exclude_paths(
+                check.id, check_config[check.id]
+            )
             configured.configure(check_config[check.id])
             result.append(configured)
         else:

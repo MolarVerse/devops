@@ -183,7 +183,11 @@ class CppConfig:
 
         lines.append(
             "#\n"
-            "# Per-check configuration (one sub-table per check id):\n"
+            "# Per-check configuration (one sub-table per check id).\n"
+            "# Every check also accepts exclude_paths (files it must not run on):\n"
+            "#[cpp.ast_check_config.noFinalKeyword]\n"
+            '#exclude_paths = ["src/legacy/", "include/generated/*.hpp"]'
+            "  # '/' suffix = dir prefix; otherwise fnmatch glob\n"
             "#[cpp.ast_check_config.paramNameForType]\n"
             '#type_to_name = { SimulationBox = "simulationBox", '
             'ForceField = "forceField" }\n'
