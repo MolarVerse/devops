@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import importlib.metadata
+import re
+import subprocess
 import typing
 
 import pytest
@@ -217,6 +220,21 @@ class TestTooManyErrorsNamesFirstError:
         assert "inner.hpp:1" in msg
 
 
+def _system_clang_major() -> int | None:
+    """Return the major version of the ``clang++`` on PATH, if any."""
+    exe = engine.shutil.which("clang++")
+    if exe is None:
+        return None
+    try:
+        out = subprocess.run(  # noqa: S603 - no shell, trusted executable
+            [exe, "--version"], capture_output=True, text=True, timeout=5, check=False
+        ).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    match = re.search(r"clang version (\d+)", out)
+    return int(match.group(1)) if match else None
+
+
 class TestGccIntrinsicHeaders:
     """GCC compile database + intrinsics headers must not break the parse."""
 
@@ -224,6 +242,12 @@ class TestGccIntrinsicHeaders:
         """<immintrin.h> parses with the args a GCC compile database yields."""
         if engine.shutil.which("clang++") is None:
             pytest.skip("needs a Clang on PATH")
+        try:
+            libclang_major = int(importlib.metadata.version("libclang").split(".")[0])
+        except importlib.metadata.PackageNotFoundError:
+            pytest.skip("needs the libclang pip wheel")
+        if _system_clang_major() != libclang_major:
+            pytest.skip("system Clang's headers must match libclang's version")
         gcc_dir = _builtin_include_dir_for_compiler("g++")
         if gcc_dir is None:
             pytest.skip("needs g++")
