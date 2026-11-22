@@ -12,6 +12,7 @@ import clang.cindex as clang
 
 from devops.cpp.ast.base import Diagnostic
 from devops.cpp.ast.registry import ALL_CHECKS
+from devops.cpp.path_patterns import matches_path
 
 if typing.TYPE_CHECKING:
     from devops.cpp.ast.base import Check
@@ -213,6 +214,74 @@ def _extract_plain_include(compile_args: list[str]) -> tuple[list[str], str | No
     return compile_args[:idx] + compile_args[idx + 2 :], file_arg
 
 
+def _is_path_excluded(filename: str, check: Check) -> bool:
+    """Check whether `check` is configured to skip `filename` (``exclude_paths``)."""
+    return any(matches_path(filename, pattern) for pattern in check.exclude_paths)
+
+
+def _fatal_parse_diagnostic(
+    translation_unit: clang.TranslationUnit, filename: str, filename_abs: str
+) -> Diagnostic | None:
+    """Build the ``astParseError`` for libclang's first fatal diagnostic, if any."""
+    # A fatal diagnostic (e.g. an unresolvable #include) aborts libclang's
+    # parse partway through the file: everything after that point is absent
+    # from the AST, so checks silently see less than the whole file with no
+    # indication why. Surface it instead of letting that pass silently — the
+    # checks below still run against whatever *was* parsed.
+    fatal = next(
+        (
+            d
+            for d in translation_unit.diagnostics
+            if d.severity >= clang.Diagnostic.Fatal
+        ),
+        None,
+    )
+    if fatal is None:
+        return None
+    # The fatal error often sits in a *nested* include (e.g. a standard
+    # header), not in the file being checked: only claim the line/column
+    # when it is in this file, otherwise name the file it really is in.
+    fatal_file = fatal.location.file.name if fatal.location.file else None
+    in_this_file = fatal_file in (None, filename_abs, filename)
+    where = (
+        ""
+        if in_this_file
+        else (
+            f" (in included file {fatal_file}:"
+            f"{fatal.location.line}:{fatal.location.column})"
+        )
+    )
+    # "too many errors emitted" carries no location and hides the real
+    # cause: name the first ordinary error that led up to it.
+    first_error = next(
+        (
+            d
+            for d in translation_unit.diagnostics
+            if d.severity == clang.Diagnostic.Error
+        ),
+        None,
+    )
+    if first_error is not None and fatal.spelling.startswith("too many errors"):
+        err_file = first_error.location.file
+        where += (
+            f" — first error: {first_error.spelling} "
+            f"({err_file.name if err_file else filename}:"
+            f"{first_error.location.line}:{first_error.location.column})"
+        )
+    return Diagnostic(
+        file=filename,
+        line=fatal.location.line if in_this_file else 0,
+        column=fatal.location.column if in_this_file else 0,
+        message=(
+            "libclang hit a fatal error while parsing this file — "
+            "everything after this point was not parsed, so checks "
+            f"may have missed issues there: {fatal.spelling}{where}"
+        ),
+        check_id="astParseError",
+        severity="error",
+    )
+
+
 def run_ast_checks(
     path: Path,
     content: str,
@@ -244,6 +313,11 @@ def run_ast_checks(
 
     """
     checks = ALL_CHECKS if checks is None else checks
+    if checks:
+        checks = [c for c in checks if not _is_path_excluded(str(path), c)]
+        if not checks:
+            # Every check excludes this file: nothing to run, so skip the parse.
+            return []
     compile_args = _with_fallback_resource_dir(compile_args)
     compile_args, prelude_include = _extract_plain_include(compile_args)
 
@@ -309,64 +383,9 @@ def run_ast_checks(
 
     diagnostics: list[Diagnostic] = []
 
-    # A fatal diagnostic (e.g. an unresolvable #include) aborts libclang's
-    # parse partway through the file: everything after that point is absent
-    # from the AST, so checks silently see less than the whole file with no
-    # indication why. Surface it instead of letting that pass silently — the
-    # checks below still run against whatever *was* parsed.
-    fatal = next(
-        (
-            d
-            for d in translation_unit.diagnostics
-            if d.severity >= clang.Diagnostic.Fatal
-        ),
-        None,
-    )
-    if fatal is not None:
-        # The fatal error often sits in a *nested* include (e.g. a standard
-        # header), not in the file being checked: only claim the line/column
-        # when it is in this file, otherwise name the file it really is in.
-        fatal_file = fatal.location.file.name if fatal.location.file else None
-        in_this_file = fatal_file in (None, filename_abs, filename)
-        where = (
-            ""
-            if in_this_file
-            else (
-                f" (in included file {fatal_file}:"
-                f"{fatal.location.line}:{fatal.location.column})"
-            )
-        )
-        # "too many errors emitted" carries no location and hides the real
-        # cause: name the first ordinary error that led up to it.
-        first_error = next(
-            (
-                d
-                for d in translation_unit.diagnostics
-                if d.severity == clang.Diagnostic.Error
-            ),
-            None,
-        )
-        if first_error is not None and fatal.spelling.startswith("too many errors"):
-            err_file = first_error.location.file
-            where += (
-                f" — first error: {first_error.spelling} "
-                f"({err_file.name if err_file else filename}:"
-                f"{first_error.location.line}:{first_error.location.column})"
-            )
-        diagnostics.append(
-            Diagnostic(
-                file=filename,
-                line=fatal.location.line if in_this_file else 0,
-                column=fatal.location.column if in_this_file else 0,
-                message=(
-                    "libclang hit a fatal error while parsing this file — "
-                    "everything after this point was not parsed, so checks "
-                    f"may have missed issues there: {fatal.spelling}{where}"
-                ),
-                check_id="astParseError",
-                severity="error",
-            )
-        )
+    fatal_diagnostic = _fatal_parse_diagnostic(translation_unit, filename, filename_abs)
+    if fatal_diagnostic is not None:
+        diagnostics.append(fatal_diagnostic)
 
     for cursor in translation_unit.cursor.walk_preorder():
         loc = cursor.location

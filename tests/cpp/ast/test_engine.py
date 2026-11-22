@@ -312,3 +312,49 @@ class TestGccBuiltinIncludeFallback:
     def test_unknown_compiler_is_still_a_noop(self) -> None:
         """Neither query works for a missing compiler: args are unchanged."""
         assert _with_auto_resource_dir(["-x"], "not-a-real-compiler-xyz") == ["-x"]
+
+
+class TestExcludePaths:
+    """A check's ``exclude_paths`` keeps it from running on matching files."""
+
+    @staticmethod
+    def _check(exclude: tuple[str, ...]) -> NoGlobalUsing:
+        check = NoGlobalUsing()
+        check.exclude_paths = exclude
+        return check
+
+    def test_excluded_directory_is_skipped(self, tmp_path: Path) -> None:
+        """No diagnostics for a file under an excluded directory."""
+        d = tmp_path / "legacy"
+        d.mkdir()
+        p = d / "a.hpp"
+        code = "using namespace std;\n"
+        p.write_text(code)
+        diags = run_ast_checks(
+            p, code, ["-std=c++17"], checks=[self._check(("legacy/",))]
+        )
+        assert diags == []
+
+    def test_other_directory_still_checked(self, tmp_path: Path) -> None:
+        """The same code outside the excluded directory is still flagged."""
+        p = tmp_path / "a.hpp"
+        code = "using namespace std;\n"
+        p.write_text(code)
+        diags = run_ast_checks(
+            p, code, ["-std=c++17"], checks=[self._check(("legacy/",))]
+        )
+        assert any(d.check_id == "noGlobalUsing" for d in diags)
+
+    def test_only_the_excluding_check_is_skipped(self, tmp_path: Path) -> None:
+        """Another check without the exclusion still runs on that file."""
+        p = tmp_path / "legacy" / "a.hpp"
+        p.parent.mkdir()
+        code = "using namespace std;\n"
+        p.write_text(code)
+        diags = run_ast_checks(
+            p,
+            code,
+            ["-std=c++17"],
+            checks=[self._check(("legacy/",)), self._check(())],
+        )
+        assert len([d for d in diags if d.check_id == "noGlobalUsing"]) == 1

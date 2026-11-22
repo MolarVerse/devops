@@ -305,6 +305,20 @@ its full configuration reference (``memberLeadingUnderscore``,
 ``macroReplacement``, ``noGlobalUsing``, ``noGlobalUsingEnum``,
 ``noThrowParen``).
 
+Every check, regardless of its own keys, additionally accepts
+``exclude_paths``: a list of path patterns for files the check must not run
+on (the other checks still do). A pattern ending in ``/`` excludes a whole
+directory anywhere in the path (including subdirectories); any other pattern
+is an ``fnmatch`` glob matched against the trailing path components, so
+``"src/units/*.cpp"`` works regardless of the absolute prefix. A file that
+every enabled check excludes is not even parsed. To skip a directory for
+*all* checks, use ``exclude_dirs`` instead.
+
+.. code-block:: toml
+
+   [cpp.ast_check_config.noFinalKeyword]
+   exclude_paths = ["src/legacy/", "include/generated/*.hpp"]
+
 ``[file]``
 ^^^^^^^^^^
 

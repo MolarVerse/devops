@@ -129,3 +129,22 @@ class TestConfigureChecks:
         a_result = next(c for c in result if c.id == "a")
         a_original = next(c for c in checks if c.id == "a")
         assert a_result is a_original
+
+
+class TestExcludePaths:
+    """The generic ``exclude_paths`` key understood by every check."""
+
+    def test_exclude_paths_set_on_configured_check(self, checks: list[Check]) -> None:
+        """``exclude_paths`` is stored on the copy, for any check."""
+        result = configure_checks(checks, {"b": {"exclude_paths": ["src/legacy/"]}})
+        b_check = next(c for c in result if c.id == "b")
+        assert b_check.exclude_paths == ("src/legacy/",)
+        assert next(c for c in result if c.id == "a").exclude_paths == ()
+
+    @pytest.mark.parametrize("bad", ["src/", [1], {"a": "b"}])
+    def test_invalid_exclude_paths_raises(
+        self, checks: list[Check], bad: object
+    ) -> None:
+        """A non-list-of-strings ``exclude_paths`` is a ConfigError."""
+        with pytest.raises(ConfigError, match="exclude_paths"):
+            configure_checks(checks, {"b": {"exclude_paths": bad}})
