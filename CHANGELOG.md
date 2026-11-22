@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release
 
+<!-- insertion marker -->
+## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22
+
 ### Features
 
 #### CPP Rules
@@ -20,7 +23,6 @@ All notable changes to this project will be documented in this file.
 
 - Run the cheap text-based C++ rules before the libclang AST rule; with `fail_fast`, a file that already fails one of them is no longer parsed (#220)
 
-<!-- insertion marker -->
 ## [1.2.0](https://github.com/MolarVerse/devops/releases/tag/1.2.0) - 2026-11-20
 
 ### Features
@@ -463,6 +465,7 @@ All notable changes to this project will be documented in this file.
 - Add automatic release CI for PRs to main (either via title or via hotfix/ branch)
 - Add overnight CI runs for pytest and ruff CIs
 - Add test coverage to pytest CI
+
 
 
 
