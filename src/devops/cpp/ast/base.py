@@ -52,6 +52,11 @@ class Check:
     #: unique id, used as the cppcheck-style [id] suffix
     id: str = "unnamed-check"
 
+    #: path patterns (see `devops.cpp.path_patterns.matches_path`) of files
+    #: this check never runs on; set from the ``exclude_paths`` key of the
+    #: check's ``cpp.ast_check_config.<id>`` table by `configure_checks`
+    exclude_paths: tuple[str, ...] = ()
+
     def visit(self, cursor: clang.Cursor, filename: str) -> list[Diagnostic]:
         """Inspect a single AST node during the shared preorder walk.
 
@@ -99,6 +104,10 @@ class Check:
         Called once during setup with the sub-table keyed by this check's
         `.id` in ``cpp.ast_check_config``. Override to read your check's
         own settings. The default implementation ignores all config.
+
+        The generic ``exclude_paths`` key is understood by every check and
+        is applied before this method is called (see `configure_checks`), so
+        overrides need not handle it — but must not reject it as unknown.
 
         Parameters
         ----------

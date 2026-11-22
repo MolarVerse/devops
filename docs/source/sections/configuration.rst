@@ -204,6 +204,16 @@ Controls the checks run by :ref:`cpp_checks <cli-cpp_checks>`.
        also use ``{ext}`` (the upper-cased extension: ``HPP``,
        ``IMPL_HPP``, ``TPP`` or ``H``). Raises a ``ConfigError`` at load
        time if set without ``{path}``.
+   * - ``forbidden_spellings``
+     - table of string -> string
+     - ``{}``
+     - Dictionary of spellings that must not appear in C++ files, mapped to
+       the spelling to use instead (``[cpp.forbidden_spellings]``,
+       e.g. ``colour = "color"``). Matched case-sensitively on whole words
+       by default (``colour`` does not match ``colourful``); use
+       ``colour = { replacement = "color", within_words = true }`` to also
+       flag it inside longer words. A plain text rule, not the
+       AST framework. Empty disables the rule.
    * - ``ast_checks``
      - boolean
      - ``true``
@@ -294,6 +304,20 @@ its full configuration reference (``memberLeadingUnderscore``,
 ``memberFunctionLeadingUnderscore``, ``paramNameForType``,
 ``macroReplacement``, ``noGlobalUsing``, ``noGlobalUsingEnum``,
 ``noThrowParen``).
+
+Every check, regardless of its own keys, additionally accepts
+``exclude_paths``: a list of path patterns for files the check must not run
+on (the other checks still do). A pattern ending in ``/`` excludes a whole
+directory anywhere in the path (including subdirectories); any other pattern
+is an ``fnmatch`` glob matched against the trailing path components, so
+``"src/units/*.cpp"`` works regardless of the absolute prefix. A file that
+every enabled check excludes is not even parsed. To skip a directory for
+*all* checks, use ``exclude_dirs`` instead.
+
+.. code-block:: toml
+
+   [cpp.ast_check_config.noFinalKeyword]
+   exclude_paths = ["src/legacy/", "include/generated/*.hpp"]
 
 ``[file]``
 ^^^^^^^^^^
