@@ -153,6 +153,10 @@ Available checks
    * - :doc:`noVoidPointerParam <no_void_pointer_param>`
      - A ``void *`` parameter of a public or protected function.
      - None
+   * - :doc:`noPlainDoubleQuantity <no_plain_double_quantity>`
+     - A ``double``/``float`` data member (or container of them) named like
+       a physical quantity, e.g. ``double potentialEnergy``.
+     - Optional (``name_patterns``, ``allowed_names``, ``typed_templates``)
 
 .. toctree::
    :maxdepth: 1
@@ -183,3 +187,4 @@ Available checks
    prefer_mstd_copy_move_macros
    no_maybe_unused_param
    no_void_pointer_param
+   no_plain_double_quantity
