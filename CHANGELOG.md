@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release
 
+### Features
+
+#### CPP Rules
+
+- Add `consistentGetterPrefix` AST check flagging a class whose getters (const, parameterless, non-void methods) mix `getX()` and plain `x()` names; predicate and verb names (`isX`, `hasX`, `clone`, `calculateX`, ...), `size`/`empty`/`begin`/`end`, operators and overrides are exempt, and `exempt_names`/`exempt_prefixes` add more (Fixes #231)
+
 <!-- insertion marker -->
 ## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22
 
