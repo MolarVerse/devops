@@ -153,6 +153,10 @@ Available checks
    * - :doc:`noVoidPointerParam <no_void_pointer_param>`
      - A ``void *`` parameter of a public or protected function.
      - None
+   * - :doc:`noTrivialTypeAlias <no_trivial_type_alias>`
+     - A type alias that only renames a builtin or ``std`` type
+       (e.g. ``using Shape = std::vector<std::size_t>;``).
+     - Optional (``allowed_names``)
 
 .. toctree::
    :maxdepth: 1
@@ -183,3 +187,4 @@ Available checks
    prefer_mstd_copy_move_macros
    no_maybe_unused_param
    no_void_pointer_param
+   no_trivial_type_alias
