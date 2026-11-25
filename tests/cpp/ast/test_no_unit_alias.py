@@ -124,6 +124,8 @@ def test_flagged(tmp_path: Path, code: str) -> None:
         "void g(double v) { const auto q = v * angstrom; }",
         "double h(); const auto q = h() * angstrom;",
         "constexpr bool B = 1 < 2;",
+        "constexpr auto COMMA = (0, m);",
+        "constexpr auto PICK = true ? m : m;",
     ],
 )
 def test_not_flagged(tmp_path: Path, code: str) -> None:
