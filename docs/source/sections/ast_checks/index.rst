@@ -153,6 +153,10 @@ Available checks
    * - :doc:`noVoidPointerParam <no_void_pointer_param>`
      - A ``void *`` parameter of a public or protected function.
      - None
+   * - :doc:`noSingleUseConstexpr <no_single_use_constexpr>`
+     - A namespace-scope ``constexpr`` variable in a source file used at
+       most ``max_uses`` times in that file.
+     - Optional (``max_uses``)
 
 .. toctree::
    :maxdepth: 1
@@ -183,3 +187,4 @@ Available checks
    prefer_mstd_copy_move_macros
    no_maybe_unused_param
    no_void_pointer_param
+   no_single_use_constexpr

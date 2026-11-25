@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release
 
+### Features
+
+#### AST Checks
+
+- Add `noSingleUseConstexpr` AST check flagging namespace-scope `constexpr` variables (global, named or anonymous namespace) of a `.cpp` file that are used at most `max_uses` (default 1) times in that file; variables in headers are skipped since other files may use them (Fixes #229)
+
 <!-- insertion marker -->
 ## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22
 
