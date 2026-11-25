@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-#### AST Checks
+#### CPP Rules
 
 - Add `noUnitAlias` AST check flagging `const`/`constexpr` variables that only give a unit a new name, e.g. `constexpr auto ASE_FORCE = eV / angstrom;`; unit types come from `unit_namespaces` (default `mp_units`, `mstd::units`), quantities such as `9.0 * angstrom` are allowed (Fixes #228)
 
@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file.
 
 - Add the `forbidden_spellings` option to `[cpp]`: a dictionary of spellings (e.g. `colour = "color"`) that are flagged as whole words in every C++ file, together with the spelling to use instead; `colour = { replacement = "color", within_words = true }` also flags it inside longer words. Errors report `file:line`; it is a plain text rule, independent of the AST framework (Fixes #220)
 
-#### AST Checks
+#### CPP Rules
 
 - Every AST check now accepts `exclude_paths` in its `[cpp.ast_check_config.<id>]` table to skip files or directories (same patterns as before for `noForbiddenInclude`/`enforceCppOnlyInclude`); a file excluded by all enabled checks is not parsed (Fixes #223)
 - The `astParseError` for libclang's "too many errors emitted, stopping now" now also names the first real error (message and `file:line:col`) that caused it, instead of only the location-less error limit
