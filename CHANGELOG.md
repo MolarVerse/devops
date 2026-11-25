@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release
 
+### Features
+
+#### AST Checks
+
+- Add `noUnitAlias` AST check flagging `const`/`constexpr` variables that only give a unit a new name, e.g. `constexpr auto ASE_FORCE = eV / angstrom;`; unit types come from `unit_namespaces` (default `mp_units`, `mstd::units`), quantities such as `9.0 * angstrom` are allowed (Fixes #228)
+
 <!-- insertion marker -->
 ## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22
 

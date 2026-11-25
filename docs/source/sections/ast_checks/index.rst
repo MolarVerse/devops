@@ -153,6 +153,9 @@ Available checks
    * - :doc:`noVoidPointerParam <no_void_pointer_param>`
      - A ``void *`` parameter of a public or protected function.
      - None
+   * - :doc:`noUnitAlias <no_unit_alias>`
+     - A ``const``/``constexpr`` variable that only gives a unit a new name.
+     - Optional (``unit_namespaces``, ``quantity_types``)
 
 .. toctree::
    :maxdepth: 1
@@ -183,3 +186,4 @@ Available checks
    prefer_mstd_copy_move_macros
    no_maybe_unused_param
    no_void_pointer_param
+   no_unit_alias
