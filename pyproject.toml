@@ -19,6 +19,7 @@ ast = ["libclang>=18.1.1"]
 cpp_checks = "devops.scripts.cpp_checks:app"
 update_changelog = "devops.scripts.update_changelog:update_changelog"
 update_changelogs = "devops.scripts.update_changelog:update_changelogs"
+devops_changelog = "devops.scripts.update_changelog:changelog"
 get_latest_tag = "devops.scripts.get_latest_git_tag:latest_tag"
 increase_latest_tag = "devops.scripts.get_latest_git_tag:increase_tag"
 generate_toml_template = "devops.scripts.generate_toml_template:app"

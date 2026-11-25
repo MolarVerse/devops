@@ -64,6 +64,26 @@ def get_repo_url() -> str:
     return f"{Constants.github.github_url}/{match.group(1)}"
 
 
+def release_header(version: str, repo_url: str) -> str:
+    """Return the changelog heading of a release made today.
+
+    Parameters
+    ----------
+    version: str
+        The release version.
+    repo_url: str
+        The GitHub URL of the repository.
+
+    Returns
+    -------
+    str
+        For example ``## [1.2.0](<repo_url>/releases/tag/1.2.0) - 2026-11-24``.
+
+    """
+    today = datetime.now(tz=UTC).date().isoformat()
+    return f"## [{version}]({repo_url}/releases/tag/{version}) - {today}"
+
+
 def update_changelog(
     version: str, changelog_path: Path, repo_url: str | None = None
 ) -> None:
@@ -92,8 +112,7 @@ def update_changelog(
         content = f.readlines()
 
     repo = repo_url if repo_url is not None else get_repo_url()
-    today = datetime.now(tz=UTC).date().isoformat()
-    new_entry = f"## [{version}]({repo}/releases/tag/{version}) - {today}"
+    new_entry = release_header(version, repo)
 
     updated = []
     marker_moved = False
