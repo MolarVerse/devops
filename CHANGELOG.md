@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-#### AST Checks
+#### CPP Rules
 
 - Add `noPlainDoubleQuantity` AST check flagging data members of type `double`/`float` (also via aliases, arrays and containers such as `std::vector<double>` or `Vector3D<double>`) whose name matches a physical quantity pattern like `energy` or `force`; set `name_patterns`, `allowed_names` and `container_templates` in its config table (Fixes #230)
 
