@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 #### AST Checks
 
-- Add `noPlainDoubleQuantity` AST check flagging data members of type `double`/`float` (also via aliases, arrays and templates such as `std::vector<double>`) whose name matches a physical quantity pattern like `energy` or `force`; set `name_patterns`, `allowed_names` and `typed_templates` (default `quantity`, `quantity_point`) in its config table (Fixes #230)
+- Add `noPlainDoubleQuantity` AST check flagging data members of type `double`/`float` (also via aliases, arrays and containers such as `std::vector<double>` or `Vector3D<double>`) whose name matches a physical quantity pattern like `energy` or `force`; set `name_patterns`, `allowed_names` and `container_templates` in its config table (Fixes #230)
 
 <!-- insertion marker -->
 ## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22

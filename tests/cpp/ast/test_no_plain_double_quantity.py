@@ -116,6 +116,16 @@ def test_flagged(tmp_path: Path, code: str) -> None:
         "void f(double energy);",
         "struct S { void energy(double e); };",
         "enum class Kind { energy, force };",
+        # Templates that are not containers are handles, not values.
+        "#include <memory>\nstruct S { std::unique_ptr<double> energy; };",
+        (
+            "#include <memory>\ntemplate <typename T> struct Element {};\n"
+            "struct S { std::unique_ptr<Element<float>> force; };"
+        ),
+        (
+            "template <typename T> struct Strong { T v; };\n"
+            "struct S { Strong<double> energy; };"
+        ),
         # Typed quantities, also with a double representation.
         _QUANTITY + "struct S { mstd::quantity<mstd::kcal> energy; };",
         _QUANTITY + "struct S { mstd::quantity<mstd::kcal, double> energy; };",
@@ -188,14 +198,14 @@ class TestConfig:
         code = "struct S { double PotentialENERGY; };"
         assert len(_run(tmp_path, code, {"name_patterns": ["Energy"]})) == 1
 
-    def test_typed_templates(self, tmp_path: Path) -> None:
-        """Templates in ``typed_templates`` are not looked into."""
+    def test_container_templates(self, tmp_path: Path) -> None:
+        """Only templates in ``container_templates`` are looked into."""
         code = (
-            "template <typename T> struct Strong { T v; };\n"
-            "struct S { Strong<double> energy; };"
+            "template <typename T> struct Buffer { T v; };\n"
+            "struct S { Buffer<double> energy; };"
         )
-        assert len(_run(tmp_path, code)) == 1
-        assert _run(tmp_path, code, {"typed_templates": ["Strong"]}) == []
+        assert _run(tmp_path, code) == []
+        assert len(_run(tmp_path, code, {"container_templates": ["Buffer"]})) == 1
 
     def test_exclude_paths(self, tmp_path: Path) -> None:
         """``exclude_paths`` keeps the check from running on matching files."""
@@ -217,7 +227,7 @@ class TestConfig:
             {"name_patterns": "energy"},
             {"name_patterns": [1]},
             {"allowed_names": "energy"},
-            {"typed_templates": [None]},
+            {"container_templates": [None]},
         ],
     )
     def test_invalid_type_raises(self, config: dict) -> None:

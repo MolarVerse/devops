@@ -156,7 +156,7 @@ Available checks
    * - :doc:`noPlainDoubleQuantity <no_plain_double_quantity>`
      - A ``double``/``float`` data member (or container of them) named like
        a physical quantity, e.g. ``double potentialEnergy``.
-     - Optional (``name_patterns``, ``allowed_names``, ``typed_templates``)
+     - Optional (``name_patterns``, ``allowed_names``, ``container_templates``)
 
 .. toctree::
    :maxdepth: 1

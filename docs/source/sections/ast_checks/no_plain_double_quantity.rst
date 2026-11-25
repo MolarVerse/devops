@@ -10,8 +10,8 @@ A non-static data member of a class, struct or union is flagged if its name
 matches one of the ``name_patterns`` (case-insensitive regular expressions,
 searched anywhere in the name) and its type is ``float``, ``double`` or
 ``long double``. Typedefs, aliases, references and arrays are resolved, and
-templates are searched through their template arguments, so
-``std::vector<double>``, ``std::array<double, 3>`` and
+the templates in ``container_templates`` are searched through their template
+arguments, so ``std::vector<double>``, ``std::array<double, 3>`` and
 ``Vector3D<double>`` are flagged too.
 
 .. code-block:: cpp
@@ -27,10 +27,10 @@ templates are searched through their template arguments, so
        int energyIndex;                 // Good, not floating-point.
    };
 
-Templates named in ``typed_templates`` wrap a value with a unit and are not
-searched, so ``mstd::quantity<units::kcal, double>`` is fine. Static data
-members, members of a dependent template type, pointers, local variables,
-globals and parameters are not checked.
+Other templates are not searched: ``mstd::quantity<units::kcal, double>``
+is typed, and handles such as ``std::unique_ptr<T>`` or I/O buffers are not
+values. Static data members, members of a dependent template type,
+pointers, local variables, globals and parameters are not checked.
 
 Configuration
 -------------
@@ -55,11 +55,15 @@ Configuration
      - list of strings
      - ``[]``
      - Member names that are never flagged (exact match).
-   * - ``typed_templates``
+   * - ``container_templates``
      - list of strings
-     - ``quantity``, ``quantity_point``
-     - Template names (without namespace) that are typed quantities and
-       are not searched for floating-point arguments.
+     - ``array``, ``deque``, ``forward_list``, ``list``, ``map``,
+       ``multimap``, ``optional``, ``pair``, ``span``, ``tuple``,
+       ``unordered_map``, ``unordered_multimap``, ``valarray``,
+       ``vector``, ``Matrix``, ``StaticMatrix3x3``, ``Vector3D``
+     - Template names (without namespace) whose template arguments are
+       searched for floating-point types. A given list replaces the
+       default.
 
 .. code-block:: toml
 
