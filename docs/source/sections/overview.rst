@@ -142,6 +142,16 @@ every path configured under ``file.changelog_paths`` at once, which is how
 this project keeps multiple changelogs (if any) in sync from a single CI
 step.
 
+Repositories with many parallel pull requests can use changelog fragments
+instead, so pull requests never conflict on ``CHANGELOG.md``: every pull
+request adds a small file such as ``changes/user/bugfix.output.md`` with one
+or more Markdown bullets. :ref:`devops_changelog <cli-devops_changelog>`
+checks the fragments of a pull request in CI and, at release time, stamps
+them under the new version into the changelog of their audience (for example
+a user and a developer changelog) and deletes them. Fragment folders,
+audiences, categories and the skip label are set in
+:ref:`[changelog] <config-changelog>`.
+
 Git tag utilities
 ^^^^^^^^^^^^^^^^^^
 
@@ -241,6 +251,37 @@ Insert a new version entry into every changelog configured under
 
    update_changelogs 1.2.0
    update_changelogs 1.2.0 --changelog-paths CHANGELOG.md docs/CHANGELOG.md
+
+.. _cli-devops_changelog:
+
+``devops_changelog``
+^^^^^^^^^^^^^^^^^^^^
+
+Changelog fragment steps for CI. Errors are printed to stderr and exit with
+code 1.
+
+.. code-block:: console
+
+   devops_changelog check-pr "$BASE_SHA" "$HEAD_SHA" --label "$LABELS"
+   devops_changelog check-release
+   devops_changelog stamp v1.2.0
+   devops_changelog notes v1.2.0 > notes.md
+
+- ``check-pr BASE [HEAD]`` fails unless the pull request adds or updates at
+  least one valid fragment. It also fails if the pull request deletes a
+  fragment or edits a configured changelog directly. ``--label`` takes the
+  pull request labels, repeated or comma separated; with
+  ``changelog.skip_label`` among them the check passes. ``HEAD`` defaults to
+  ``HEAD``; the head must be checked out.
+- ``check-release`` fails unless the next release has at least one entry, or
+  if a fragment repeats a bullet of an earlier release.
+- ``stamp VERSION`` moves the ``## Next Release`` entries and all fragments
+  under a new ``VERSION`` heading in every changelog that has entries, and
+  deletes the consumed fragments (``.gitkeep`` stays). Stamping the latest
+  version again merges new fragments into it, so a failed release job can be
+  re-run. Without fragments the ``## Next Release`` body is kept as written.
+- ``notes VERSION`` prints the stamped release of every audience, for the
+  GitHub release body.
 
 .. _cli-get_latest_tag:
 
