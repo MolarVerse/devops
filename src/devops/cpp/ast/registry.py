@@ -10,6 +10,7 @@ import copy
 import typing
 
 from devops.config.base import ConfigError
+from devops.cpp.ast.checks.consistent_getter_prefix import ConsistentGetterPrefix
 from devops.cpp.ast.checks.enforce_class_member_order import EnforceClassMemberOrder
 from devops.cpp.ast.checks.enforce_cpp_only_include import EnforceCppOnlyInclude
 from devops.cpp.ast.checks.enforce_member_function_leading_underscore import (
@@ -56,6 +57,7 @@ if typing.TYPE_CHECKING:
 # Each check's `.id` is the identifier used in CppConfig.ast_check_enabled_ids
 # / ast_check_disabled_ids to turn it on or off from the input file.
 ALL_CHECKS: list[Check] = [
+    ConsistentGetterPrefix(),
     EnforceClassMemberOrder(),
     EnforceCppOnlyInclude(),
     EnforceMemberFunctionLeadingUnderscore(),
