@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 #### CPP Rules
 
+- Add `noTrivialTypeAlias` AST check flagging non-template `using X = T;` and `typedef T X;` whose target is only builtin or `std` types (e.g. `using Shape = std::vector<std::size_t>;`); aliases naming a project type or a template parameter, alias templates and names in `allowed_names` are not flagged (Fixes #227)
+- Add `noUnitAlias` AST check flagging `const`/`constexpr` variables that only give a unit a new name, e.g. `constexpr auto ASE_FORCE = eV / angstrom;`; unit types come from `unit_namespaces` (default `mp_units`, `mstd::units`), quantities such as `9.0 * angstrom` are allowed (Fixes #228)
 - Add `consistentGetterPrefix` AST check flagging a class whose getters (const, parameterless, non-void methods) mix `getX()` and plain `x()` names; predicate and verb names (`isX`, `hasX`, `clone`, `calculateX`, ...), `size`/`empty`/`begin`/`end`, operators and overrides are exempt, and `exempt_names`/`exempt_prefixes` add more (Fixes #231)
 
 #### Changelog
