@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
+#### CPP Rules
+
+- Add `noTrivialTypeAlias` AST check flagging non-template `using X = T;` and `typedef T X;` whose target is only builtin or `std` types (e.g. `using Shape = std::vector<std::size_t>;`); aliases naming a project type or a template parameter, alias templates and names in `allowed_names` are not flagged (Fixes #227)
 #### Changelog
 
 - Add the `devops_changelog` command with the changelog fragment steps from PQ and PQAnalysis: `check-pr` (the pull request adds valid fragments or has the skip label), `check-release`, `stamp` (fragments go into the changelog of their audience and are deleted, `.gitkeep` stays) and `notes`; set the fragment folder, audiences, categories and skip label in the new `[changelog]` config table (#192)
