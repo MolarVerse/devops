@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 
 - Add `noSingleUseConstexpr` AST check flagging namespace-scope `constexpr` variables (global, named or anonymous namespace) of a `.cpp` file that are used at most `max_uses` (default 1) times in that file; variables in headers are skipped since other files may use them (Fixes #229)
 
+#### Changelog
+
+- Add the `devops_changelog` command with the changelog fragment steps from PQ and PQAnalysis: `check-pr` (the pull request adds valid fragments or has the skip label), `check-release`, `stamp` (fragments go into the changelog of their audience and are deleted, `.gitkeep` stays) and `notes`; set the fragment folder, audiences, categories and skip label in the new `[changelog]` config table (#192)
+
 <!-- insertion marker -->
 ## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22
 
