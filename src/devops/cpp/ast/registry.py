@@ -44,6 +44,7 @@ from devops.cpp.ast.checks.no_maybe_unused_param import NoMaybeUnusedParam
 from devops.cpp.ast.checks.no_new_in_gtest_setup import NoNewInGtestSetup
 from devops.cpp.ast.checks.no_throw_paren import NoThrowParen
 from devops.cpp.ast.checks.no_trivial_type_alias import NoTrivialTypeAlias
+from devops.cpp.ast.checks.no_unit_alias import NoUnitAlias
 from devops.cpp.ast.checks.no_void_pointer_param import NoVoidPointerParam
 from devops.cpp.ast.checks.prefer_mstd_copy_move_macros import PreferMstdCopyMoveMacros
 
@@ -79,6 +80,7 @@ ALL_CHECKS: list[Check] = [
     NoNewInGtestSetup(),
     NoThrowParen(),
     NoTrivialTypeAlias(),
+    NoUnitAlias(),
     NoVoidPointerParam(),
     PreferMstdCopyMoveMacros(),
 ]
