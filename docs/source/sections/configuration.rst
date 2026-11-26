@@ -399,6 +399,111 @@ Controls the CI gate of :ref:`devops_release <cli-devops_release>`. Tags use
    ci_timeout = 1800
    ci_interval = 20
 
+.. _config-changelog:
+
+``[changelog]``
+^^^^^^^^^^^^^^^
+
+Controls the changelog fragments of
+:ref:`devops_changelog <cli-devops_changelog>`. A regular pull request adds a
+fragment file instead of editing a changelog; the release stamps all
+fragments into the changelog of their audience. The defaults are PQ's
+layout: ``changes/user/`` goes to ``CHANGELOG.md`` and ``changes/developer/``
+to ``DEV-CHANGELOG.md``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 15 15 50
+
+   * - Key
+     - Type
+     - Default
+     - Description
+   * - ``fragment_dir``
+     - string
+     - ``"changes"``
+     - Directory of the fragments, relative to the repository root.
+   * - ``audience_dirs``
+     - bool
+     - ``true``
+     - Fragments live in ``<fragment_dir>/<audience>/``. With ``false`` they
+       live directly in ``fragment_dir``; this needs exactly one audience.
+   * - ``skip_label``
+     - string
+     - ``"skip-changelog"``
+     - A pull request with this label needs no fragment. ``""`` turns the
+       label off.
+   * - ``max_entry_length``
+     - integer
+     - ``360``
+     - Maximum length of one bullet line. Must be positive.
+   * - ``audiences``
+     - table of tables
+     - ``user`` and ``developer``
+     - One ``[changelog.audiences.<name>]`` table per audience, in render
+       order. Setting it replaces both defaults. Names use lowercase letters,
+       digits and hyphens.
+
+Keys of ``[changelog.audiences.<name>]``. For ``user`` and ``developer``
+every key defaults to PQ's value; any other audience needs ``changelog`` and
+``categories``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 15 15 50
+
+   * - Key
+     - Type
+     - Default
+     - Description
+   * - ``changelog``
+     - string
+     - ``"CHANGELOG.md"`` / ``"DEV-CHANGELOG.md"``
+     - The changelog of this audience. Every audience needs its own file;
+       pull requests must not edit it directly.
+   * - ``categories``
+     - table of strings
+     - see below
+     - Fragment category to section title, in render order. Categories use
+       only lowercase letters.
+   * - ``section_order``
+     - list of strings
+     - ``[]`` / ``["Breaking Changes"]``
+     - Section titles rendered before the category titles, for sections
+       written by hand in ``## Next Release``.
+   * - ``notes_heading``
+     - string
+     - ``""`` / ``"Developer Changes"``
+     - ``##`` heading of this audience in ``devops_changelog notes``; ``""``
+       prints the notes without a heading.
+
+Default categories:
+
+- ``user``: ``enhancement`` (New Features), ``change`` (Changes),
+  ``bugfix`` (Bug Fixes), ``performance`` (Performance), ``compatibility``
+  (Build and Compatibility), ``documentation`` (Documentation),
+  ``deprecations`` (Deprecations).
+- ``developer``: ``enhancement`` (Enhancements), ``bugfix`` (Bug Fixes),
+  ``performance`` (Performance), ``build`` (Build), ``ci`` (CI), ``test``
+  (Tests), ``internal`` (Internal), ``documentation`` (Documentation).
+
+A fragment is named ``<category>.<slug>.md``; the slug starts with a
+lowercase letter or digit and uses lowercase letters, digits and hyphens. It
+holds one or more Markdown bullets (``- ...``), one per line, no blank lines,
+and ends with a newline. ``README.md`` and placeholders such as ``.gitkeep``
+are not fragments: keep a ``.gitkeep`` in every fragment folder, since a
+release deletes all fragments and Git does not track empty folders.
+
+.. code-block:: toml
+
+   # One changelog, fragments directly in changes/
+   [changelog]
+   audience_dirs = false
+
+   [changelog.audiences.changes]
+   changelog = "CHANGELOG.md"
+   categories = { feature = "Features", fix = "Bug Fixes" }
+
 Full example
 ------------
 
@@ -435,6 +540,16 @@ Full example
    [release]
    ci_workflows = ["ci.yml"]
 
+   [changelog]
+   fragment_dir = "changes"
+   skip_label = "skip-changelog"
+
+   [changelog.audiences.user]
+   changelog = "CHANGELOG.md"
+
+   [changelog.audiences.developer]
+   changelog = "DEV-CHANGELOG.md"
+
 Changelog file format
 ----------------------
 
@@ -443,7 +558,9 @@ changelog itself has one structural requirement:
 :ref:`update_changelog <cli-update_changelog>` and
 :ref:`update_changelogs <cli-update_changelogs>` need a ``## Next Release``
 heading followed by an ``<!-- insertion marker -->`` comment. A new entry is
-inserted directly below the heading and above the marker on every run:
+inserted directly below the heading and above the marker on every run.
+``devops_changelog stamp`` uses the same layout for every audience changelog;
+the ``## Next Release`` body may be empty and is filled from the fragments:
 
 .. code-block:: markdown
 

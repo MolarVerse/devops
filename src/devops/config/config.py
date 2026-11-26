@@ -9,6 +9,7 @@ from pathlib import Path
 from devops.logger import config_logger
 
 from .base import get_str_list, get_table
+from .config_changelog import ChangelogConfig, parse_changelog_config
 from .config_cpp import CppConfig, parse_cpp_config
 from .config_file import FileConfig, parse_file_config
 from .config_git import GitConfig, parse_git_config
@@ -57,6 +58,7 @@ class GlobalConfig:
     cpp: CppConfig = field(default_factory=CppConfig)
     file: FileConfig = field(default_factory=FileConfig)
     release: ReleaseConfig = field(default_factory=ReleaseConfig)
+    changelog: ChangelogConfig = field(default_factory=ChangelogConfig)
     # Path of the TOML file this config was read from (None for defaults).
     config_path: Path | None = None
 
@@ -76,6 +78,7 @@ class GlobalConfig:
         lines += [*self.cpp.to_toml_lines(), "\n"]
         lines += [*self.file.to_toml_lines(), "\n"]
         lines += [*self.release.to_toml_lines(), "\n"]
+        lines += [*self.changelog.to_toml_lines(), "\n"]
         file = Path(Constants.files.default_toml_template)
 
         # NOTE: here we don't want to use any special handling from
@@ -107,6 +110,7 @@ def parse_config(raw: dict[str, Any]) -> GlobalConfig:
     cpp_config = parse_cpp_config(raw)
     file_config = parse_file_config(raw)
     release_config = parse_release_config(raw)
+    changelog_config = parse_changelog_config(raw)
 
     # start exclude configuration
     exclude_table = get_table(raw, "exclude")
@@ -125,6 +129,7 @@ def parse_config(raw: dict[str, Any]) -> GlobalConfig:
         cpp=cpp_config,
         file=file_config,
         release=release_config,
+        changelog=changelog_config,
     )
 
 

@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 #### CPP Rules
 
 - Add `noUnitAlias` AST check flagging `const`/`constexpr` variables that only give a unit a new name, e.g. `constexpr auto ASE_FORCE = eV / angstrom;`; unit types come from `unit_namespaces` (default `mp_units`, `mstd::units`), quantities such as `9.0 * angstrom` are allowed (Fixes #228)
+#### Changelog
+
+- Add the `devops_changelog` command with the changelog fragment steps from PQ and PQAnalysis: `check-pr` (the pull request adds valid fragments or has the skip label), `check-release`, `stamp` (fragments go into the changelog of their audience and are deleted, `.gitkeep` stays) and `notes`; set the fragment folder, audiences, categories and skip label in the new `[changelog]` config table (#192)
 
 <!-- insertion marker -->
 ## [1.3.0](https://github.com/MolarVerse/devops/releases/tag/1.3.0) - 2026-11-22
