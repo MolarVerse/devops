@@ -157,6 +157,9 @@ Available checks
      - A type alias that only renames a builtin or ``std`` type
        (e.g. ``using Shape = std::vector<std::size_t>;``).
      - Optional (``allowed_names``)
+   * - :doc:`noUnitAlias <no_unit_alias>`
+     - A ``const``/``constexpr`` variable that only gives a unit a new name.
+     - Optional (``unit_namespaces``, ``quantity_types``)
 
 .. toctree::
    :maxdepth: 1
@@ -188,3 +191,4 @@ Available checks
    no_maybe_unused_param
    no_void_pointer_param
    no_trivial_type_alias
+   no_unit_alias
