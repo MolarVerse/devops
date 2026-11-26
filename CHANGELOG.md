@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 #### CPP Rules
 
+- Add `noTrivialTypeAlias` AST check flagging non-template `using X = T;` and `typedef T X;` whose target is only builtin or `std` types (e.g. `using Shape = std::vector<std::size_t>;`); aliases naming a project type or a template parameter, alias templates and names in `allowed_names` are not flagged (Fixes #227)
+- Add `noUnitAlias` AST check flagging `const`/`constexpr` variables that only give a unit a new name, e.g. `constexpr auto ASE_FORCE = eV / angstrom;`; unit types come from `unit_namespaces` (default `mp_units`, `mstd::units`), quantities such as `9.0 * angstrom` are allowed (Fixes #228)
 - Add `noPlainDoubleQuantity` AST check flagging data members of type `double`/`float` (also via aliases, arrays and containers such as `std::vector<double>` or `Vector3D<double>`) whose name matches a physical quantity pattern like `energy` or `force`; set `name_patterns`, `allowed_names` and `container_templates` in its config table (Fixes #230)
 
 #### Changelog
