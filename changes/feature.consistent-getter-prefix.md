@@ -1,0 +1,1 @@
+- Add `consistentGetterPrefix` AST check flagging a class whose getters (const, parameterless, non-void methods) mix `getX()` and plain `x()` names; predicate and verb names (`isX`, `hasX`, `clone`, `calculateX`, ...), `size`/`empty`/`begin`/`end`, operators and overrides are exempt, and `exempt_names`/`exempt_prefixes` add more (Fixes #231)

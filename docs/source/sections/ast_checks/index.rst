@@ -164,6 +164,9 @@ Available checks
      - A namespace-scope ``constexpr`` variable in a source file used at
        most ``max_uses`` times in that file.
      - Optional (``max_uses``)
+   * - :doc:`consistentGetterPrefix <consistent_getter_prefix>`
+     - A class with both ``getX()`` and plain ``x()`` getters.
+     - Optional (``exempt_names``, ``exempt_prefixes``)
 
 .. toctree::
    :maxdepth: 1
@@ -197,3 +200,4 @@ Available checks
    no_trivial_type_alias
    no_unit_alias
    no_single_use_constexpr
+   consistent_getter_prefix
