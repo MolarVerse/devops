@@ -1,0 +1,1 @@
+- Add `noSingleUseConstexpr` AST check flagging namespace-scope `constexpr` variables (global, named or anonymous namespace) of a `.cpp` file that are used at most `max_uses` (default 1) times in that file; variables in headers are skipped since other files may use them (Fixes #229)
