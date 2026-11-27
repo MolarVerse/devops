@@ -1,0 +1,1 @@
+- Add `noTrivialTypeAlias` AST check flagging non-template `using X = T;` and `typedef T X;` whose target is only builtin or `std` types (e.g. `using Shape = std::vector<std::size_t>;`); aliases naming a project type or a template parameter, alias templates and names in `allowed_names` are not flagged (Fixes #227)

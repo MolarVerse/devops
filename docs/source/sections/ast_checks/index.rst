@@ -164,6 +164,9 @@ Available checks
      - A ``double``/``float`` data member (or container of them) named like
        a physical quantity, e.g. ``double potentialEnergy``.
      - Optional (``name_patterns``, ``allowed_names``, ``container_templates``)
+   * - :doc:`consistentGetterPrefix <consistent_getter_prefix>`
+     - A class with both ``getX()`` and plain ``x()`` getters.
+     - Optional (``exempt_names``, ``exempt_prefixes``)
 
 .. toctree::
    :maxdepth: 1
@@ -197,3 +200,4 @@ Available checks
    no_trivial_type_alias
    no_unit_alias
    no_plain_double_quantity
+   consistent_getter_prefix
