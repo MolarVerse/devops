@@ -160,6 +160,10 @@ Available checks
    * - :doc:`noUnitAlias <no_unit_alias>`
      - A ``const``/``constexpr`` variable that only gives a unit a new name.
      - Optional (``unit_namespaces``, ``quantity_types``)
+   * - :doc:`noPlainDoubleQuantity <no_plain_double_quantity>`
+     - A ``double``/``float`` data member (or container of them) named like
+       a physical quantity, e.g. ``double potentialEnergy``.
+     - Optional (``name_patterns``, ``allowed_names``, ``container_templates``)
    * - :doc:`consistentGetterPrefix <consistent_getter_prefix>`
      - A class with both ``getX()`` and plain ``x()`` getters.
      - Optional (``exempt_names``, ``exempt_prefixes``)
@@ -195,4 +199,5 @@ Available checks
    no_void_pointer_param
    no_trivial_type_alias
    no_unit_alias
+   no_plain_double_quantity
    consistent_getter_prefix

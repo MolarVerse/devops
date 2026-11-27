@@ -43,6 +43,7 @@ from devops.cpp.ast.checks.no_in_class_member_definition import (
 )
 from devops.cpp.ast.checks.no_maybe_unused_param import NoMaybeUnusedParam
 from devops.cpp.ast.checks.no_new_in_gtest_setup import NoNewInGtestSetup
+from devops.cpp.ast.checks.no_plain_double_quantity import NoPlainDoubleQuantity
 from devops.cpp.ast.checks.no_throw_paren import NoThrowParen
 from devops.cpp.ast.checks.no_trivial_type_alias import NoTrivialTypeAlias
 from devops.cpp.ast.checks.no_unit_alias import NoUnitAlias
@@ -80,6 +81,7 @@ ALL_CHECKS: list[Check] = [
     NoInClassMemberDefinition(),
     NoMaybeUnusedParam(),
     NoNewInGtestSetup(),
+    NoPlainDoubleQuantity(),
     NoThrowParen(),
     NoTrivialTypeAlias(),
     NoUnitAlias(),
