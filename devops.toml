@@ -1,0 +1,7 @@
+# Changelog fragments for this repository (see docs: [changelog]).
+[changelog]
+audience_dirs = false
+
+[changelog.audiences.changes]
+changelog = "CHANGELOG.md"
+categories = { feature = "Features", fix = "Bug Fixes", performance = "Performance", docs = "Documentation", ci = "CI", internal = "Internal" }

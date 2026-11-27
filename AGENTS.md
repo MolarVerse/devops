@@ -33,7 +33,9 @@ The project's Sphinx documentation lives under `docs/source` and is built with t
 
 ## Changelog
 
-`CHANGELOG.md` has a `## Next Release` heading followed by an `<!-- insertion marker -->` comment (see `devops.files.update_changelog`).
+Pull requests do **not** edit `CHANGELOG.md`. Each one adds a fragment `changes/<category>.<slug>.md` with one or more `- ...` bullets (one per line, no blank lines, ending with a newline), e.g. `changes/feature.no-unit-alias.md`.
 
-- New entries go **directly below the `## Next Release` heading and above the `<!-- insertion marker -->` comment** — never below the marker.
-- The marker is where `update_changelog`/`update_changelogs` insert the next version heading on release; anything left below the marker gets silently attributed to that new version instead of staying under "Next Release".
+- Categories (`devops.toml`): `feature` (Features), `fix` (Bug Fixes), `performance`, `docs` (Documentation), `ci` (CI), `internal`.
+- CI checks this with `devops_changelog check-pr`; PRs that need no entry get the `skip-changelog` label.
+- On release, `create-tag.yml` runs `devops_changelog stamp <version>`, which moves all fragments under the new version heading in `CHANGELOG.md` and deletes them (`changes/.gitkeep` stays).
+
