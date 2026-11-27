@@ -1,0 +1,1 @@
+- Use changelog fragments in this repository too: pull requests add `changes/<category>.<slug>.md` instead of editing `CHANGELOG.md`, CI runs `devops_changelog check-pr` and the release runs `devops_changelog stamp`, so parallel pull requests no longer conflict on the changelog (Fixes #237)

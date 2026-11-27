@@ -1,0 +1,1 @@
+- Add the `devops_changelog` command with the changelog fragment steps from PQ and PQAnalysis: `check-pr`, `check-release`, `stamp` and `notes`; set the fragment folder, audiences, categories and skip label in the new `[changelog]` config table (#192)

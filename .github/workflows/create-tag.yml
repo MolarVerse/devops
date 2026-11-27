@@ -77,10 +77,10 @@ jobs:
           echo "✅ Found release version: $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Update CHANGELOG.md
+      - name: Stamp changelog fragments
         run: |
           version="${{ steps.extract_version.outputs.version }}"
-          update_changelog "$version"
+          devops_changelog stamp "$version"
 
       - name: Commit and push changelog update
         run: |
@@ -88,7 +88,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add CHANGELOG.md
+          git add -A CHANGELOG.md changes/
           git commit -m "docs: update changelog for $version" || echo "No changes to commit"
           git push origin HEAD:main
 
